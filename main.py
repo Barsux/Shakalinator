@@ -17,7 +17,7 @@ from PyPDF2 import PdfMerger
 SETTINGS = "settings.json"
 rootdir = os.path.abspath(os.path.dirname(__file__))
 
-#Функция преобразует docx в pdf
+#Функция преобразует docx в pdf.
 def word2pdf(docx_path, pdf_path):
     word = comtypes.client.CreateObject('Word.Application')
     word.Visible = True
@@ -27,7 +27,7 @@ def word2pdf(docx_path, pdf_path):
     doc.Close() 
     word.Visible = False
 
-#Функция для предоставления выбора файла
+#Функция для предоставления выбора файла.
 def choose_file(files, greeting) -> int:
     while(True):
         print(greeting)
@@ -44,7 +44,7 @@ def choose_file(files, greeting) -> int:
         else:
             return output_file_idx - 1
 
-#Функция для извлечения изображений с pdf файла
+#Функция для извлечения изображений с pdf файла.
 def read_pdf(filename, output_dir):
     zoom_x = 4.0  
     zoom_y = 4.0  
@@ -59,7 +59,7 @@ def read_pdf(filename, output_dir):
             img.save(os.path.join(output_dir, name))
         
 
-#Функция для чтения настроек
+#Функция для чтения настроек.
 def read_json(filename):
     try:
         with open(filename, 'r', encoding='utf-8') as f:
@@ -68,7 +68,7 @@ def read_json(filename):
         print("ОШИБКА. Файл настроек не найден")
         return None
     
-#Функция для чтения документа
+#Функция для чтения документа.
 def read_document(filename):
     document = Document(filename)
     table = document.tables[0] 
@@ -76,7 +76,7 @@ def read_document(filename):
     return document, table
 
 
-#Функция для создания временных папок
+#Функция для создания временных папок.
 def check_dirs(settings):
     should_exist = ["image_sequence_dir", "temp_docx", "temp_pdf"]
     shouldnt_exist = ["output_docx"]
@@ -88,7 +88,7 @@ def check_dirs(settings):
             shutil.rmtree(settings[dir])
 
 
-#Функция для удаления временных файлов
+#Функция для удаления временных файлов.
 def delete_temp(settings):
     shouldnt_exist = ["image_sequence_dir", "temp_docx", "temp_pdf"]
     for dir in shouldnt_exist:
@@ -98,25 +98,25 @@ def delete_temp(settings):
 
 
 def main():
-    #Получаем абсолютный путь до скрипта и получаем все файлы в этой директории
+    #Получаем абсолютный путь до скрипта и получаем все файлы в этой директории.
     root = os.path.abspath(os.getcwd()) + '\\'
     files_in_directory = filter(os.path.isfile, glob.glob(root + '*'))
     files_in_directory = sorted(files_in_directory, key=os.path.getmtime)
     files_in_directory = list(filter(lambda file: ".pdf" in file and "output" not in file, files_in_directory))
-    #Предоставляем выбор для исходного pdf файла
+    #Предоставляем выбор для исходного pdf файла.
     idx = choose_file(files_in_directory, "Выберите исходный файл:")
 
 
     print("Читаю настройки.")
-    #Получаем настройки из json
+    #Получаем настройки из json.
     settings = read_json(os.path.join(rootdir, SETTINGS))
-    #Удаляем временные файлы и директории и создаём пустые
+    #Удаляем временные файлы и директории и создаём пустые.
     delete_temp(settings)
     check_dirs(settings)
     
     output_path = os.path.join(rootdir, settings["image_sequence_dir"])
     print("Читаю pdf.")
-    #Экспортируем изображения из pdf
+    #Экспортируем изображения из pdf.
     read_pdf(files_in_directory[idx], output_path)
 
 
@@ -129,16 +129,16 @@ def main():
     document, table = read_document(settings["input_docx"]) 
 
 
-    #Переменная указывает ровно ли штрихкоды заполнят лист A4
+    #Переменная указывает ровно ли штрихкоды заполнят лист A4.
     overflow = False
     if len(image_files) % 8 != 0:
         overflow = True
 
-    #Указатель на строку, колонку и страницу
+    #Указатель на строку, колонку и страницу.
     row_ptr = 0
     col_ptr = 0
     table_ptr = 0
-    #Список абсолютных путей временных .docx файлов
+    #Список абсолютных путей временных .docx файлов.
     documents = []
     for i in range(len(image_files)):
         if col_ptr == 2:
@@ -153,7 +153,7 @@ def main():
             document.save(document_name)
             document, table = read_document(settings["input_docx"])
             table_ptr += 1
-        #В каждой ячейке таблицы создаётся параграф и помещается изображение размером A7
+        #В каждой ячейке таблицы создаётся параграф и помещается изображение размером A7.
         image_path = os.path.join(settings["image_sequence_dir"], image_files[i])
         paragraph = table.cell(row_ptr, col_ptr).add_paragraph()
         paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
@@ -162,14 +162,19 @@ def main():
         col_ptr += 1
 
 
-    #Если изображения не до конца заполняют таблицы, то последнее изображение сохраняется
+    #Все дальнейшие действия - настоящие извращения, т.к. проблема находится на стороне word.
+    #Даже Аллах не ведает почему таблицы переполняются при сохранении многостраничного .docx документа.
+    #Поэтому происходит временное сохранение одностраничных .docx документов, конвертация в .pdf и соединение его в один файл.
+
+
+    #Если изображения не до конца заполняют таблицы, то последнее изображение сохраняется.
     if overflow:
         document_name = f"{settings['temp_docx']}\\N{table_ptr}_{settings['output_docx']}"
         document_path = os.path.join(rootdir, document_name)
         documents.append(document_path)
         document.save(document_path)
 
-    #Переконвертация временных .docx в .pdf
+    #Переконвертация временных .docx в .pdf.
     print("Сохраняю pdf.")
     pdf_files = []
     for document in documents:
@@ -180,7 +185,7 @@ def main():
         pdf_files.append(output_path)
         word2pdf(document, output_path)
     
-    #Соединение всех pdf в один
+    #Соединение всех pdf в один.
     print("Слепляю pdf.")
     merger = PdfMerger()
     for file in pdf_files:
