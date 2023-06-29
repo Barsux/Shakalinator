@@ -4,5 +4,6 @@
     "output_docx":"output.docx",
     "temp_docx":"temp_doc",
     "temp_pdf":"temp_pdf",
-    "image_sequence_dir":"images"
+    "image_sequence_dir":"images",
+    "barcode_width":3.6
 }

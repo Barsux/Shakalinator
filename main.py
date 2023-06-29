@@ -158,7 +158,7 @@ def main():
         paragraph = table.cell(row_ptr, col_ptr).add_paragraph()
         paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
         run = paragraph.add_run()
-        run.add_picture(image_path, width=Inches(4.1))
+        run.add_picture(image_path, width=Inches(settings["barcode_width"]))
         col_ptr += 1
 
 
@@ -173,7 +173,7 @@ def main():
         document_path = os.path.join(rootdir, document_name)
         documents.append(document_path)
         document.save(document_path)
-
+ 
     #Переконвертация временных .docx в .pdf.
     print("Сохраняю pdf.")
     pdf_files = []
