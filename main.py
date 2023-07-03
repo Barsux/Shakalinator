@@ -129,11 +129,6 @@ def main():
     document, table = read_document(settings["input_docx"]) 
 
 
-    #Переменная указывает ровно ли штрихкоды заполнят лист A4.
-    overflow = False
-    if len(image_files) % 8 != 0:
-        overflow = True
-
     #Указатель на строку, колонку и страницу.
     row_ptr = 0
     col_ptr = 0
@@ -168,11 +163,10 @@ def main():
 
 
     #Если изображения не до конца заполняют таблицы, то последнее изображение сохраняется.
-    if overflow:
-        document_name = f"{settings['temp_docx']}\\N{table_ptr}_{settings['output_docx']}"
-        document_path = os.path.join(rootdir, document_name)
-        documents.append(document_path)
-        document.save(document_path)
+    document_name = f"{settings['temp_docx']}\\N{table_ptr}_{settings['output_docx']}"
+    document_path = os.path.join(rootdir, document_name)
+    documents.append(document_path)
+    document.save(document_path)
  
     #Переконвертация временных .docx в .pdf.
     print("Сохраняю pdf.")
